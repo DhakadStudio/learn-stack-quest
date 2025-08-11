@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { SelectionCard } from "@/components/SelectionCard";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { GraduationCap, BookOpen } from "lucide-react";
 
 const Index = () => {
@@ -9,8 +10,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background px-4 py-8">
       <div className="max-w-md mx-auto space-y-8">
-        {/* Header */}
+        {/* Header with Theme Toggle */}
         <div className="text-center space-y-4 animate-fade-in">
+          <div className="flex justify-end mb-4">
+            <ThemeToggle />
+          </div>
+          
           <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto shadow-elevated">
             <GraduationCap className="w-8 h-8 text-primary-foreground" />
           </div>

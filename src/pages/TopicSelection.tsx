@@ -39,7 +39,7 @@ const TopicSelection = () => {
             <SelectionCard
               key={topic.id}
               title={`${index + 1}. ${topic.name}`}
-              onClick={() => navigate(`/questions/${classId}/${subjectId}/${chapterId}/${topic.id}`)}
+              onClick={() => navigate(`/question-list/${classId}/${subjectId}/${chapterId}/${topic.id}`)}
               className="h-16"
             />
           ))}
