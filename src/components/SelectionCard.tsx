@@ -24,7 +24,7 @@ export const SelectionCard = ({
       size="card"
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center space-y-2 p-6 animate-fade-in",
+        "flex flex-col items-center justify-center space-y-2 p-6 animate-fade-in overflow-hidden",
         isAd && "bg-gradient-accent border-accent/30",
         className
       )}
