@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { localDatabase } from "@/services/localDatabase";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Index from "./pages/Index";
 import SubjectSelection from "./pages/SubjectSelection";
@@ -35,7 +36,14 @@ const App = () => {
     }
   }, []);
 
-  const handleLoadingComplete = () => {
+  const handleLoadingComplete = async () => {
+    try {
+      // Initialize local database
+      await localDatabase.initialize();
+    } catch (error) {
+      console.error('Failed to initialize local database:', error);
+    }
+    
     sessionStorage.setItem('hasShownLoading', 'true');
     setIsLoading(false);
   };

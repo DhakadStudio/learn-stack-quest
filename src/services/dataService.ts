@@ -2,6 +2,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLocalData } from '@/hooks/useLocalData';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { toast } from 'sonner';
+import { localDatabase } from './localDatabase';
+import { subjects, chapters, topics } from '@/data/mockData';
 
 export interface Subject {
   id: string;
@@ -42,74 +44,80 @@ export interface TopicProgress {
   percentage_completed: number;
 }
 
-// Service hooks using the data fetching pattern
+// Service hooks using local data with error handling
 export const useSubjects = (classId: string) => {
-  const { isOnline } = useNetworkStatus();
-  
-  return useLocalData(
-    `subjects_${classId}`,
-    async () => {
-      if (!isOnline) {
-        toast.error('No internet connection. Please check your network.');
-        throw new Error('No internet connection');
-      }
-      
-      const { data, error } = await supabase
-        .from('subjects')
-        .select('*')
-        .eq('class_id', classId)
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  );
+  try {
+    // Use local data directly - no network calls needed
+    const classSubjects = subjects[classId] || [];
+    return {
+      data: classSubjects,
+      loading: false,
+      error: null,
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  } catch (error) {
+    console.error('Error getting subjects:', error);
+    return {
+      data: [],
+      loading: false,
+      error: 'Failed to load subjects',
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  }
 };
 
 export const useChapters = (subjectId: string) => {
-  const { isOnline } = useNetworkStatus();
-  
-  return useLocalData(
-    `chapters_${subjectId}`,
-    async () => {
-      if (!isOnline) {
-        toast.error('No internet connection. Please check your network.');
-        throw new Error('No internet connection');
-      }
-      
-      const { data, error } = await supabase
-        .from('chapters')
-        .select('*')
-        .eq('subject_id', subjectId)
-        .order('chapter_number');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  );
+  try {
+    // Use local data directly - no network calls needed
+    const subjectChapters = chapters[subjectId] || [];
+    return {
+      data: subjectChapters,
+      loading: false,
+      error: null,
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  } catch (error) {
+    console.error('Error getting chapters:', error);
+    return {
+      data: [],
+      loading: false,
+      error: 'Failed to load chapters',
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  }
 };
 
 export const useTopics = (chapterId: string) => {
-  const { isOnline } = useNetworkStatus();
-  
-  return useLocalData(
-    `topics_${chapterId}`,
-    async () => {
-      if (!isOnline) {
-        toast.error('No internet connection. Please check your network.');
-        throw new Error('No internet connection');
-      }
-      
-      const { data, error } = await supabase
-        .from('topics')
-        .select('*')
-        .eq('chapter_id', chapterId)
-        .order('topic_number');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  );
+  try {
+    // Use local data directly - no network calls needed
+    const chapterTopics = topics[chapterId] || [];
+    return {
+      data: chapterTopics,
+      loading: false,
+      error: null,
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  } catch (error) {
+    console.error('Error getting topics:', error);
+    return {
+      data: [],
+      loading: false,
+      error: 'Failed to load topics',
+      refreshData: () => Promise.resolve(),
+      clearCache: () => Promise.resolve(),
+      fetchData: () => Promise.resolve()
+    };
+  }
 };
 
 export const useQuestions = (topicId: string) => {
@@ -118,19 +126,64 @@ export const useQuestions = (topicId: string) => {
   return useLocalData(
     `questions_${topicId}`,
     async () => {
-      if (!isOnline) {
-        toast.error('No internet connection. Please check your network.');
-        throw new Error('No internet connection');
+      try {
+        // Initialize local database
+        await localDatabase.initialize();
+        
+        if (isOnline) {
+          // Try to fetch from Supabase first
+          const { data, error } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('topic_id', topicId)
+            .order('created_at');
+          
+          if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+          }
+          
+          if (data && data.length > 0) {
+            // Save to local database for offline access
+            await localDatabase.saveQuestions(topicId, data);
+            return data;
+          }
+        }
+        
+        // Fallback to local database
+        const localQuestions = await localDatabase.getQuestions(topicId);
+        if (localQuestions.length > 0) {
+          if (!isOnline) {
+            toast.info('Using offline data');
+          }
+          return localQuestions;
+        }
+        
+        // If no data found anywhere, show appropriate message
+        if (!isOnline) {
+          toast.error('No internet connection and no offline data available');
+        } else {
+          toast.info('No questions found for this topic');
+        }
+        
+        return [];
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        
+        // Try local database as final fallback
+        try {
+          const localQuestions = await localDatabase.getQuestions(topicId);
+          if (localQuestions.length > 0) {
+            toast.info('Using offline data');
+            return localQuestions;
+          }
+        } catch (localError) {
+          console.error('Local database error:', localError);
+        }
+        
+        toast.error('Failed to load questions');
+        return [];
       }
-      
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('topic_id', topicId)
-        .order('created_at');
-      
-      if (error) throw error;
-      return data || [];
     }
   );
 };
