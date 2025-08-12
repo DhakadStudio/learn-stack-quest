@@ -55,6 +55,7 @@ const QuestionSelection = () => {
 
   // Get available years for filtering
   const availableYears = useMemo(() => {
+    if (!topicQuestions || !Array.isArray(topicQuestions)) return [];
     const years = topicQuestions
       .map(q => q.year)
       .filter((year): year is number => year !== undefined && year !== null);
@@ -63,6 +64,7 @@ const QuestionSelection = () => {
 
   // Apply filters to questions
   const filteredQuestions = useMemo(() => {
+    if (!topicQuestions || !Array.isArray(topicQuestions)) return [];
     return topicQuestions.filter(question => {
       const isCompleted = completedQuestions.includes(question.id);
       
@@ -87,6 +89,7 @@ const QuestionSelection = () => {
 
   // Sort questions: incomplete first, then by difficulty
   const sortedQuestions = useMemo(() => {
+    if (!filteredQuestions || !Array.isArray(filteredQuestions)) return [];
     return [...filteredQuestions].sort((a, b) => {
       const aCompleted = completedQuestions.includes(a.id);
       const bCompleted = completedQuestions.includes(b.id);
@@ -109,6 +112,9 @@ const QuestionSelection = () => {
 
   // Calculate question counts for filter badges
   const questionCounts = useMemo(() => {
+    if (!topicQuestions || !Array.isArray(topicQuestions)) {
+      return { total: 0, completed: 0, incomplete: 0, easy: 0, medium: 0, hard: 0, single: 0, multi: 0 };
+    }
     const total = topicQuestions.length;
     const completed = topicQuestions.filter(q => completedQuestions.includes(q.id)).length;
     const incomplete = total - completed;
@@ -123,9 +129,9 @@ const QuestionSelection = () => {
 
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
-    if (topicQuestions.length === 0) return 0;
+    if (!topicQuestions || !Array.isArray(topicQuestions) || topicQuestions.length === 0) return 0;
     return Math.round((questionCounts.completed / questionCounts.total) * 100);
-  }, [questionCounts, topicQuestions.length]);
+  }, [questionCounts, topicQuestions]);
 
   // Handle question selection
   const handleQuestionStart = (questionId: string) => {
@@ -153,7 +159,7 @@ const QuestionSelection = () => {
     );
   }
 
-  if (topicQuestions.length === 0) {
+  if (!topicQuestions || topicQuestions.length === 0) {
     return (
       <ComingSoonCard 
         topicName={currentTopic?.name || "this topic"}
