@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Bookmark, BookmarkCheck, Clock, Eye, Check, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Bookmark, BookmarkCheck, Clock, Eye, Expand, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-interface Question {
+interface PhotoQuestion {
   id: string;
   question_text: string;
   answer_text: string;
+  image_url?: string;
   year?: number;
   difficulty?: 'easy' | 'medium' | 'hard';
 }
 
-interface QuestionCardProps {
-  question: Question;
+interface PhotoQuestionCardProps {
+  question: PhotoQuestion;
   onNext: () => void;
   onBookmark: (questionId: string) => void;
   onMarkComplete: (questionId: string, isComplete: boolean) => void;
@@ -22,17 +24,19 @@ interface QuestionCardProps {
   isCompleted: boolean;
 }
 
-export const QuestionCard = ({ 
+export const PhotoQuestionCard = ({ 
   question, 
   onNext, 
   onBookmark,
   onMarkComplete,
   isBookmarked,
   isCompleted
-}: QuestionCardProps) => {
+}: PhotoQuestionCardProps) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +54,8 @@ export const QuestionCard = ({
     setShowAnswer(false);
     setTimeElapsed(0);
     setIsRunning(true);
+    setImageLoaded(false);
+    setImageError(false);
   }, [question.id]);
 
   const handleShowAnswer = () => {
@@ -91,22 +97,24 @@ export const QuestionCard = ({
             <Clock className="w-4 h-4" />
             <span className="text-sm font-medium">{formatTime(timeElapsed)}</span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBookmark}
-            className="text-primary hover:text-accent"
-          >
-            {isBookmarked ? (
-              <BookmarkCheck className="w-5 h-5" />
-            ) : (
-              <Bookmark className="w-5 h-5" />
-            )}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBookmark}
+              className="text-primary hover:text-accent"
+            >
+              {isBookmarked ? (
+                <BookmarkCheck className="w-5 h-5" />
+              ) : (
+                <Bookmark className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
         </div>
         
         <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
-          <span>Question</span>
+          <span>Photo Question</span>
           {question.year && <span>Year: {question.year}</span>}
         </div>
       </CardHeader>
@@ -116,6 +124,47 @@ export const QuestionCard = ({
           <h2 className="text-lg font-semibold text-foreground leading-relaxed">
             {question.question_text}
           </h2>
+          
+          {/* Image Section */}
+          <div className="relative">
+            {!imageError ? (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <div className="relative cursor-pointer group">
+                    <img
+                      src={question.image_url}
+                      alt="Question image"
+                      className={cn(
+                        "w-full rounded-lg border border-border transition-opacity",
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      )}
+                      onLoad={() => setImageLoaded(true)}
+                      onError={() => setImageError(true)}
+                    />
+                    {!imageLoaded && !imageError && (
+                      <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center">
+                        <div className="animate-pulse text-muted-foreground">Loading image...</div>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Expand className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                  <img
+                    src={question.image_url}
+                    alt="Question image - Full screen"
+                    className="w-full h-auto max-h-[90vh] object-contain"
+                  />
+                </DialogContent>
+              </Dialog>
+            ) : (
+              <div className="w-full h-48 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center justify-center">
+                <p className="text-destructive text-sm">Failed to load image</p>
+              </div>
+            )}
+          </div>
           
           {showAnswer && (
             <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20 animate-fade-in">

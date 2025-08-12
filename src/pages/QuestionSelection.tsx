@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { QuestionFilters, QuestionFilters as Filters } from "@/components/QuestionFilters";
 import { QuestionListItem } from "@/components/QuestionListItem";
+import { YearFilter } from "@/components/YearFilter";
+import { ProgressBar } from "@/components/ProgressBar";
+import { ComingSoonCard } from "@/components/ComingSoonCard";
+import { OfflinePrompt } from "@/components/OfflinePrompt";
 import { ArrowLeft, Home, BookOpen, Shuffle } from "lucide-react";
-import { questions, chapters, topics } from "@/data/mockData";
+import { useQuestions } from "@/services/dataService";
+import { chapters, topics } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 /**
  * Question Selection Page
@@ -28,6 +34,8 @@ const QuestionSelection = () => {
   }>();
   const navigate = useNavigate();
 
+  const { isOnline } = useNetworkStatus();
+  
   // Local storage for user progress and bookmarks
   const [completedQuestions, setCompletedQuestions] = useLocalStorage<string[]>("completed_questions", []);
   const [bookmarkedQuestions] = useLocalStorage<string[]>("bookmarked_questions", []);
@@ -38,11 +46,20 @@ const QuestionSelection = () => {
     difficulty: "all",
     concepts: "all"
   });
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
-  // Get questions for current topic
-  const topicQuestions = questions[topicId || ""] || [];
+  // Get questions from service
+  const { data: topicQuestions = [], loading, error } = useQuestions(topicId || "");
   const currentTopic = topics[chapterId || ""]?.find(t => t.id === topicId);
   const currentChapter = chapters[subjectId || ""]?.find(c => c.id === chapterId);
+
+  // Get available years for filtering
+  const availableYears = useMemo(() => {
+    const years = topicQuestions
+      .map(q => q.year)
+      .filter((year): year is number => year !== undefined && year !== null);
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [topicQuestions]);
 
   // Apply filters to questions
   const filteredQuestions = useMemo(() => {
@@ -56,13 +73,17 @@ const QuestionSelection = () => {
       // Difficulty filter
       if (filters.difficulty !== "all" && question.difficulty !== filters.difficulty) return false;
       
-      // Concept complexity filter
-      if (filters.concepts === "single" && question.isMultiConcept) return false;
-      if (filters.concepts === "multi" && !question.isMultiConcept) return false;
+      // Year filter
+      if (selectedYear !== "all" && question.year?.toString() !== selectedYear) return false;
+      
+      // Concept complexity filter (if field exists)
+      const isMultiConcept = question.concepts && question.concepts.length > 1;
+      if (filters.concepts === "single" && isMultiConcept) return false;
+      if (filters.concepts === "multi" && !isMultiConcept) return false;
       
       return true;
     });
-  }, [topicQuestions, filters, completedQuestions]);
+  }, [topicQuestions, filters, selectedYear, completedQuestions]);
 
   // Sort questions: incomplete first, then by difficulty
   const sortedQuestions = useMemo(() => {
@@ -75,9 +96,14 @@ const QuestionSelection = () => {
         return aCompleted ? 1 : -1;
       }
       
-      // Then sort by difficulty (simple -> medium -> hard)
-      const difficultyOrder = { simple: 1, medium: 2, hard: 3 };
-      return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+      // Then sort by year (newest first), then by difficulty
+      if (a.year !== b.year) {
+        return (b.year || 0) - (a.year || 0);
+      }
+      
+      const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
+      return (difficultyOrder[a.difficulty as keyof typeof difficultyOrder] || 0) - 
+             (difficultyOrder[b.difficulty as keyof typeof difficultyOrder] || 0);
     });
   }, [filteredQuestions, completedQuestions]);
 
@@ -86,14 +112,20 @@ const QuestionSelection = () => {
     const total = topicQuestions.length;
     const completed = topicQuestions.filter(q => completedQuestions.includes(q.id)).length;
     const incomplete = total - completed;
-    const simple = topicQuestions.filter(q => q.difficulty === "simple").length;
+    const easy = topicQuestions.filter(q => q.difficulty === "easy").length;
     const medium = topicQuestions.filter(q => q.difficulty === "medium").length;
     const hard = topicQuestions.filter(q => q.difficulty === "hard").length;
-    const single = topicQuestions.filter(q => !q.isMultiConcept).length;
-    const multi = topicQuestions.filter(q => q.isMultiConcept).length;
+    const single = topicQuestions.filter(q => !q.concepts || q.concepts.length <= 1).length;
+    const multi = topicQuestions.filter(q => q.concepts && q.concepts.length > 1).length;
     
-    return { total, completed, incomplete, simple, medium, hard, single, multi };
+    return { total, completed, incomplete, easy, medium, hard, single, multi };
   }, [topicQuestions, completedQuestions]);
+
+  // Calculate progress percentage
+  const progressPercentage = useMemo(() => {
+    if (topicQuestions.length === 0) return 0;
+    return Math.round((questionCounts.completed / questionCounts.total) * 100);
+  }, [questionCounts, topicQuestions.length]);
 
   // Handle question selection
   const handleQuestionStart = (questionId: string) => {
@@ -111,25 +143,30 @@ const QuestionSelection = () => {
     }
   };
 
-  if (topicQuestions.length === 0) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background px-4 py-8 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">No questions available for this topic</p>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/topics/${classId}/${subjectId}/${chapterId}`)}
-          >
-            Go Back
-          </Button>
+          <div className="animate-pulse text-muted-foreground">Loading questions...</div>
         </div>
       </div>
     );
   }
 
+  if (topicQuestions.length === 0) {
+    return (
+      <ComingSoonCard 
+        topicName={currentTopic?.name || "this topic"}
+        onGoBack={() => navigate(`/topics/${classId}/${subjectId}/${chapterId}`)}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background px-4 py-6">
-      <div className="max-w-md mx-auto space-y-6">
+    <>
+      <OfflinePrompt />
+      <div className="min-h-screen bg-background px-4 py-6">
+        <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <Button
@@ -157,6 +194,15 @@ const QuestionSelection = () => {
           </div>
         </div>
 
+        {/* Progress Bar */}
+        <div className="animate-fade-in">
+          <ProgressBar 
+            progress={progressPercentage}
+            variant={progressPercentage === 100 ? "success" : "default"}
+            showPercentage={true}
+          />
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 animate-fade-in">
           <Button
@@ -182,12 +228,20 @@ const QuestionSelection = () => {
         </div>
 
         {/* Filters */}
-        <div className="animate-fade-in">
+        <div className="animate-fade-in space-y-4">
           <QuestionFilters 
             filters={filters}
             onFiltersChange={setFilters}
             questionCounts={questionCounts}
           />
+          
+          {availableYears.length > 0 && (
+            <YearFilter
+              selectedYear={selectedYear}
+              onYearChange={setSelectedYear}
+              availableYears={availableYears}
+            />
+          )}
         </div>
 
         {/* Questions List */}
@@ -219,8 +273,9 @@ const QuestionSelection = () => {
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

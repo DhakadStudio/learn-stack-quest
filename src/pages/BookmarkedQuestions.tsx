@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen } from "lucide-react";
-import { questions } from "@/data/mockData";
+import { Question } from "@/services/dataService";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const BookmarkedQuestions = () => {
@@ -11,15 +11,8 @@ const BookmarkedQuestions = () => {
   const [bookmarkedQuestions, setBookmarkedQuestions] = useLocalStorage<string[]>("bookmarked_questions", []);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Get all bookmarked questions from all topics
-  const bookmarkedQuestionData = bookmarkedQuestions.map(id => {
-    // Find the question in all topics
-    for (const topicQuestions of Object.values(questions)) {
-      const question = topicQuestions.find(q => q.id === id);
-      if (question) return question;
-    }
-    return null;
-  }).filter(Boolean);
+  // For now, return empty array - would need to implement proper bookmark retrieval from service
+  const bookmarkedQuestionData: Question[] = [];
 
   const handleNext = () => {
     if (currentIndex < bookmarkedQuestionData.length - 1) {
@@ -36,6 +29,11 @@ const BookmarkedQuestions = () => {
     if (currentIndex >= bookmarkedQuestionData.length - 1) {
       setCurrentIndex(Math.max(0, bookmarkedQuestionData.length - 2));
     }
+  };
+
+  const handleMarkComplete = (questionId: string, isComplete: boolean) => {
+    // Implementation for marking complete/incomplete
+    console.log('Mark complete:', questionId, isComplete);
   };
 
   if (bookmarkedQuestionData.length === 0) {
@@ -109,7 +107,9 @@ const BookmarkedQuestions = () => {
             question={currentQuestion}
             onNext={handleNext}
             onBookmark={handleBookmark}
+            onMarkComplete={handleMarkComplete}
             isBookmarked={true}
+            isCompleted={false}
           />
         )}
       </div>

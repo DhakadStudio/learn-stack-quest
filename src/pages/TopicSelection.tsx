@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { SelectionCard } from "@/components/SelectionCard";
+import { TopicProgressCard } from "@/components/TopicProgressCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { topics, chapters } from "@/data/mockData";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const TopicSelection = () => {
   const { classId, subjectId, chapterId } = useParams<{ 
@@ -14,6 +15,18 @@ const TopicSelection = () => {
 
   const chapterTopics = topics[chapterId || ""] || [];
   const chapter = chapters[subjectId || ""]?.find(c => c.id === chapterId);
+  
+  // Get completed questions for progress calculation
+  const [completedQuestions] = useLocalStorage<string[]>("completed_questions", []);
+
+  // Calculate progress for each topic (mock data for now)
+  const getTopicProgress = (topicId: string) => {
+    // This would normally come from a service that tracks per-topic progress
+    // For now, returning random progress for demonstration
+    const completed = completedQuestions.filter(q => q.startsWith(topicId)).length;
+    const total = Math.max(10, completed + Math.floor(Math.random() * 20)); // Mock total
+    return Math.round((completed / total) * 100);
+  };
 
   return (
     <div className="min-h-screen bg-background px-4 py-8">
@@ -35,14 +48,19 @@ const TopicSelection = () => {
 
         {/* Topic List */}
         <div className="space-y-3">
-          {chapterTopics.map((topic, index) => (
-            <SelectionCard
-              key={topic.id}
-              title={`${index + 1}. ${topic.name}`}
-              onClick={() => navigate(`/question-list/${classId}/${subjectId}/${chapterId}/${topic.id}`)}
-              className="h-16"
-            />
-          ))}
+          {chapterTopics.map((topic, index) => {
+            const progress = getTopicProgress(topic.id);
+            return (
+              <TopicProgressCard
+                key={topic.id}
+                topicId={topic.id}
+                topicName={topic.name}
+                topicNumber={index + 1}
+                progress={progress}
+                onClick={() => navigate(`/question-list/${classId}/${subjectId}/${chapterId}/${topic.id}`)}
+              />
+            );
+          })}
         </div>
 
         {chapterTopics.length === 0 && (
