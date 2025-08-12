@@ -2,10 +2,31 @@ import { useNavigate } from "react-router-dom";
 import { SelectionCard } from "@/components/SelectionCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { BookMarked, GraduationCap, BookOpen } from "lucide-react";
+import { PerformanceButton } from "@/components/PerformanceButton";
+import { StreakDisplay } from "@/components/StreakDisplay";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { BookMarked, GraduationCap, BookOpen, Bell } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import questionBankLogo from "@/assets/question-bank-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { permissionStatus, requestPermission, isSupported } = usePushNotifications();
+
+  useEffect(() => {
+    // Request notification permission on first visit
+    if (isSupported && permissionStatus === 'prompt') {
+      setTimeout(() => {
+        toast('Enable notifications to track your learning streak!', {
+          action: {
+            label: 'Enable',
+            onClick: () => requestPermission()
+          }
+        });
+      }, 2000);
+    }
+  }, [isSupported, permissionStatus, requestPermission]);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -13,19 +34,35 @@ const Index = () => {
         <div className="max-w-md mx-auto px-4 py-8 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4 animate-fade-in">
-            <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-2xl flex items-center justify-center shadow-elevated">
-              <BookOpen className="w-8 h-8 text-white" />
+            <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center shadow-elevated overflow-hidden">
+              <img src={questionBankLogo} alt="? Bank Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                LearnHub
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                ? Bank
               </h1>
               <p className="text-muted-foreground">Choose your class to begin learning</p>
             </div>
-            <div className="flex justify-end">
-              <ThemeToggle />
+            <div className="flex justify-between items-center">
+              <PerformanceButton />
+              <div className="flex gap-2">
+                {permissionStatus !== 'granted' && isSupported && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={requestPermission}
+                    className="text-muted-foreground"
+                  >
+                    <Bell className="w-4 h-4" />
+                  </Button>
+                )}
+                <ThemeToggle />
+              </div>
             </div>
           </div>
+
+          {/* Streak Display */}
+          <StreakDisplay />
 
           {/* Class Selection */}
           <div className="space-y-4">

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Index from "./pages/Index";
 import SubjectSelection from "./pages/SubjectSelection";
 import ChapterSelection from "./pages/ChapterSelection";
@@ -61,6 +62,7 @@ const App = () => {
         disableTransitionOnChange
       >
         <TooltipProvider>
+          <OfflineIndicator />
           <Toaster />
           <Sonner />
           <BrowserRouter>

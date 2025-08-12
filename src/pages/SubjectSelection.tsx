@@ -1,14 +1,26 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { SelectionCard } from "@/components/SelectionCard";
 import { Button } from "@/components/ui/button";
+import { LoadingSkeleton } from "@/components/LoadingSkeleton";
+import { useSubjects } from "@/services/dataService";
 import { ArrowLeft } from "lucide-react";
-import { subjects, isAd } from "@/data/mockData";
 
 const SubjectSelection = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const { data: classSubjects, loading, error } = useSubjects(classId || "");
 
-  const classSubjects = subjects[classId || ""] || [];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <div className="min-h-screen bg-background/95 backdrop-blur-sm">
+          <div className="max-w-md mx-auto px-4 py-8">
+            <LoadingSkeleton type="list" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -34,23 +46,15 @@ const SubjectSelection = () => {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Available Subjects</h2>
             <div className="grid grid-cols-1 gap-3">
-              {classSubjects.map((subject) => (
+              {classSubjects?.map((subject) => (
                 <SelectionCard
                   key={subject.id}
                   title={subject.name}
                   icon={<span className="text-2xl">{subject.icon}</span>}
-                  onClick={() => {
-                    if (isAd(subject.id)) {
-                      // Handle ad click
-                      console.log("Ad clicked:", subject.name);
-                    } else {
-                      navigate(`/chapters/${classId}/${subject.id}`);
-                    }
-                  }}
-                  isAd={isAd(subject.id)}
+                  onClick={() => navigate(`/chapters/${classId}/${subject.id}`)}
                   className="h-16 flex-row justify-start text-left pl-6"
                 />
-              ))}
+              )) || []}
             </div>
           </div>
         </div>
