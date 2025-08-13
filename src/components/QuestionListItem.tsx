@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, BookmarkCheck, Play, Target } from "lucide-react";
-import { Question } from "@/services/dataService";
+import { Question, concepts } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 interface QuestionListItemProps {
@@ -25,17 +25,19 @@ export const QuestionListItem = ({
   onClick 
 }: QuestionListItemProps) => {
   // Get difficulty color for badge styling
-  const getDifficultyColor = (difficulty?: string) => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy": return "bg-secondary text-secondary-foreground";
+      case "simple": return "bg-secondary text-secondary-foreground";
       case "medium": return "bg-warning text-warning-foreground";
       case "hard": return "bg-destructive text-destructive-foreground";
       default: return "bg-muted text-muted-foreground";
     }
   };
 
-  // Get concept names 
-  const conceptNames = question.concepts || [];
+  // Get concept names from concept IDs
+  const conceptNames = question.concepts.map(conceptId => 
+    concepts[conceptId]?.name || conceptId
+  );
 
   return (
     <Card 
@@ -65,52 +67,50 @@ export const QuestionListItem = ({
             variant="secondary" 
             className={cn("text-xs", getDifficultyColor(question.difficulty))}
           >
-            {question.difficulty?.toUpperCase() || 'UNKNOWN'}
+            {question.difficulty.toUpperCase()}
           </Badge>
         </div>
 
         {/* Question text preview */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground line-clamp-2 leading-relaxed">
-            {question.question_text}
+            {question.text}
           </p>
         </div>
 
         {/* Concepts used */}
-        {conceptNames.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center space-x-1">
-              <Target className="w-3 h-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">
-                {conceptNames.length > 1 ? "Multi-concept" : "Single concept"}
-              </span>
-            </div>
-            
-            {/* Concept tags */}
-            <div className="flex flex-wrap gap-1">
-              {conceptNames.slice(0, 2).map((concept, index) => (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
-                  className="text-xs bg-primary/5 border-primary/20 text-primary"
-                >
-                  {concept}
-                </Badge>
-              ))}
-              {conceptNames.length > 2 && (
-                <Badge variant="outline" className="text-xs bg-muted/50">
-                  +{conceptNames.length - 2} more
-                </Badge>
-              )}
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-1">
+            <Target className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              {question.isMultiConcept ? "Multi-concept" : "Single concept"}
+            </span>
           </div>
-        )}
+          
+          {/* Concept tags */}
+          <div className="flex flex-wrap gap-1">
+            {conceptNames.slice(0, 2).map((concept, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="text-xs bg-primary/5 border-primary/20 text-primary"
+              >
+                {concept}
+              </Badge>
+            ))}
+            {conceptNames.length > 2 && (
+              <Badge variant="outline" className="text-xs bg-muted/50">
+                +{conceptNames.length - 2} more
+              </Badge>
+            )}
+          </div>
+        </div>
 
         {/* Footer with time estimate and action button */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <div className="flex items-center space-x-1 text-muted-foreground">
             <Clock className="w-3 h-3" />
-            <span className="text-xs">{question.estimated_time || 5} min</span>
+            <span className="text-xs">{question.estimatedTime} min</span>
           </div>
           
           <Button 

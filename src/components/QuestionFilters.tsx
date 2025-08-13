@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 export interface QuestionFilters {
   status: "all" | "completed" | "incomplete";
-  difficulty: "all" | "easy" | "medium" | "hard";
+  difficulty: "all" | "simple" | "medium" | "hard";
   concepts: "all" | "single" | "multi";
 }
 
@@ -26,7 +26,7 @@ interface QuestionFiltersProps {
     total: number;
     completed: number;
     incomplete: number;
-    easy: number;
+    simple: number;
     medium: number;
     hard: number;
     single: number;
@@ -123,16 +123,16 @@ export const QuestionFilters = ({
               All
             </Button>
             <Button
-              variant={filters.difficulty === "easy" ? "secondary" : "outline"}
+              variant={filters.difficulty === "simple" ? "secondary" : "outline"}
               size="sm"
-              onClick={() => updateFilter("difficulty", "easy")}
+              onClick={() => updateFilter("difficulty", "simple")}
               className={cn(
                 "h-7 px-3 text-xs",
-                filters.difficulty === "easy" && "bg-secondary text-secondary-foreground"
+                filters.difficulty === "simple" && "bg-secondary text-secondary-foreground"
               )}
             >
               <Zap className="w-3 h-3 mr-1" />
-              Easy ({questionCounts.easy})
+              Simple ({questionCounts.simple})
             </Button>
             <Button
               variant={filters.difficulty === "medium" ? "default" : "outline"}

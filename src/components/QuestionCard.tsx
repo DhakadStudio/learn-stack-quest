@@ -1,34 +1,30 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Bookmark, BookmarkCheck, Clock, Eye, Check, X } from "lucide-react";
+import { Bookmark, BookmarkCheck, Clock, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: string;
-  question_text: string;
-  answer_text: string;
-  year?: number;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  text: string;
+  answer: string;
+  chapter: string;
+  topic: string;
 }
 
 interface QuestionCardProps {
   question: Question;
   onNext: () => void;
   onBookmark: (questionId: string) => void;
-  onMarkComplete: (questionId: string, isComplete: boolean) => void;
   isBookmarked: boolean;
-  isCompleted: boolean;
 }
 
 export const QuestionCard = ({ 
   question, 
   onNext, 
   onBookmark,
-  onMarkComplete,
-  isBookmarked,
-  isCompleted
+  isBookmarked 
 }: QuestionCardProps) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -67,16 +63,6 @@ export const QuestionCard = ({
     });
   };
 
-  const handleMarkComplete = (complete: boolean) => {
-    onMarkComplete(question.id, complete);
-    toast({
-      title: complete ? "Marked as complete" : "Marked as incomplete",
-      description: complete 
-        ? "Question marked as completed" 
-        : "Question marked as not done",
-    });
-  };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -105,16 +91,15 @@ export const QuestionCard = ({
           </Button>
         </div>
         
-        <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
-          <span>Question</span>
-          {question.year && <span>Year: {question.year}</span>}
+        <div className="text-xs text-muted-foreground mb-2">
+          {question.chapter} • {question.topic}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground leading-relaxed">
-            {question.question_text}
+            {question.text}
           </h2>
           
           {showAnswer && (
@@ -124,7 +109,7 @@ export const QuestionCard = ({
                 Answer
               </h3>
               <p className="text-foreground leading-relaxed">
-                {question.answer_text}
+                {question.answer}
               </p>
             </div>
           )}
@@ -142,36 +127,14 @@ export const QuestionCard = ({
               Show Answer
             </Button>
           ) : (
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <Button
-                  variant={isCompleted ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleMarkComplete(true)}
-                  className="flex-1"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Done
-                </Button>
-                <Button
-                  variant={!isCompleted ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleMarkComplete(false)}
-                  className="flex-1"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Not Done
-                </Button>
-              </div>
-              <Button
-                variant="success"
-                size="wide"
-                onClick={onNext}
-                className="w-full"
-              >
-                Next Question
-              </Button>
-            </div>
+            <Button
+              variant="success"
+              size="wide"
+              onClick={onNext}
+              className="w-full"
+            >
+              Next Question
+            </Button>
           )}
         </div>
       </CardContent>

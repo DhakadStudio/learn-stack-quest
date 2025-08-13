@@ -136,7 +136,7 @@ export const useQuestions = (topicId: string) => {
             .from('questions')
             .select('*')
             .eq('topic_id', topicId)
-            .order('year', { ascending: false });
+            .order('created_at');
           
           if (error) {
             console.error('Supabase error:', error);
@@ -159,6 +159,13 @@ export const useQuestions = (topicId: string) => {
           return localQuestions;
         }
         
+        // If no data found anywhere, show appropriate message
+        if (!isOnline) {
+          toast.error('No internet connection and no offline data available');
+        } else {
+          toast.info('No questions found for this topic');
+        }
+        
         return [];
       } catch (error) {
         console.error('Error fetching questions:', error);
@@ -174,10 +181,10 @@ export const useQuestions = (topicId: string) => {
           console.error('Local database error:', localError);
         }
         
+        toast.error('Failed to load questions');
         return [];
       }
-    },
-    1000 * 60 * 10 // 10 minutes cache for questions
+    }
   );
 };
 

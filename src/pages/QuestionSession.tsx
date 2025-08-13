@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { QuestionCard } from "@/components/QuestionCard";
-import { PhotoQuestionCard } from "@/components/PhotoQuestionCard";
 import { AdCard } from "@/components/AdCard";
 import { GoogleAdPlaceholder } from "@/components/GoogleAdPlaceholder";
-import { OfflinePrompt } from "@/components/OfflinePrompt";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ArrowLeft, Home, ChevronLeft, ChevronRight } from "lucide-react";
-import { useQuestions } from "@/services/dataService";
+import { questions } from "@/data/mockData";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 /**
  * Question Session Component
@@ -32,7 +29,6 @@ const QuestionSession = () => {
   }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isOnline } = useNetworkStatus();
   
   // Local storage for user data
   const [bookmarkedQuestions, setBookmarkedQuestions] = useLocalStorage<string[]>("bookmarked_questions", []);
@@ -48,8 +44,7 @@ const QuestionSession = () => {
   const touchEndX = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get questions from service
-  const { data: topicQuestions = [], loading } = useQuestions(topicId || "");
+  const topicQuestions = questions[topicId || ""] || [];
   
   // Check if starting from a specific question
   const startQuestionId = searchParams.get("start");
@@ -141,27 +136,6 @@ const QuestionSession = () => {
     });
   };
 
-  // Question completion handling
-  const handleMarkComplete = (questionId: string, isComplete: boolean) => {
-    setCompletedQuestions(prev => {
-      if (isComplete) {
-        return prev.includes(questionId) ? prev : [...prev, questionId];
-      } else {
-        return prev.filter(id => id !== questionId);
-      }
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background px-4 py-8 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-pulse text-muted-foreground">Loading questions...</div>
-        </div>
-      </div>
-    );
-  }
-
   if (topicQuestions.length === 0) {
     return (
       <div className="min-h-screen bg-background px-4 py-8 flex items-center justify-center">
@@ -181,17 +155,13 @@ const QuestionSession = () => {
   const currentQuestion = topicQuestions[currentQuestionIndex];
 
   return (
-    <>
-      <OfflinePrompt 
-        message="Please turn on your internet connection to access ads and sync your progress."
-      />
-      <div 
-        className="min-h-screen bg-background px-4 py-6"
-        ref={containerRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+    <div 
+      className="min-h-screen bg-background px-4 py-6"
+      ref={containerRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="max-w-md mx-auto space-y-6">
         {/* Enhanced Header with Theme Toggle and Navigation */}
         <div className="flex items-center justify-between animate-fade-in">
@@ -243,23 +213,12 @@ const QuestionSession = () => {
         <div className="relative">
           {showAd ? (
             <AdCard onNext={handleNext} />
-          ) : currentQuestion.image_url ? (
-            <PhotoQuestionCard
-              question={currentQuestion as any}
-              onNext={handleNext}
-              onBookmark={handleBookmark}
-              onMarkComplete={handleMarkComplete}
-              isBookmarked={bookmarkedQuestions.includes(currentQuestion.id)}
-              isCompleted={completedQuestions.includes(currentQuestion.id)}
-            />
           ) : (
             <QuestionCard
               question={currentQuestion}
               onNext={handleNext}
               onBookmark={handleBookmark}
-              onMarkComplete={handleMarkComplete}
               isBookmarked={bookmarkedQuestions.includes(currentQuestion.id)}
-              isCompleted={completedQuestions.includes(currentQuestion.id)}
             />
           )}
         </div>
@@ -297,9 +256,8 @@ const QuestionSession = () => {
         <div className="animate-fade-in">
           <GoogleAdPlaceholder size="large" />
         </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 };
 
