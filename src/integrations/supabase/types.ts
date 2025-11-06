@@ -7,112 +7,37 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      app_settings: {
-        Row: {
-          created_at: string | null
-          id: string
-          key: string
-          updated_at: string | null
-          value: Json | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          key: string
-          updated_at?: string | null
-          value?: Json | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          key?: string
-          updated_at?: string | null
-          value?: Json | null
-        }
-        Relationships: []
-      }
-      bug_reports: {
-        Row: {
-          created_at: string | null
-          description: string
-          id: string
-          question_id: string | null
-          report_type: string
-          status: string | null
-          topic_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description: string
-          id?: string
-          question_id?: string | null
-          report_type: string
-          status?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string
-          id?: string
-          question_id?: string | null
-          report_type?: string
-          status?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bug_reports_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bug_reports_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       chapters: {
         Row: {
-          chapter_number: number | null
-          created_at: string | null
+          created_at: string
           id: string
           name: string
-          subject_id: string | null
-          updated_at: string | null
+          s_no: number
+          subject_id: string
+          updated_at: string
         }
         Insert: {
-          chapter_number?: number | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name: string
-          subject_id?: string | null
-          updated_at?: string | null
+          s_no: number
+          subject_id: string
+          updated_at?: string
         }
         Update: {
-          chapter_number?: number | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name?: string
-          subject_id?: string | null
-          updated_at?: string | null
+          s_no?: number
+          subject_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -124,44 +49,65 @@ export type Database = {
           },
         ]
       }
+      exams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
-          answer_text: string
-          concepts: string[] | null
-          created_at: string | null
-          difficulty: Database["public"]["Enums"]["question_difficulty"] | null
-          estimated_time: number | null
+          answer: string
+          concept_type: string | null
+          concepts: string | null
+          created_at: string
+          difficulty: string | null
           id: string
-          image_url: string | null
+          marks: number | null
           question_text: string
-          topic_id: string | null
-          updated_at: string | null
+          topic_id: string
+          updated_at: string
           year: number | null
         }
         Insert: {
-          answer_text: string
-          concepts?: string[] | null
-          created_at?: string | null
-          difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
-          estimated_time?: number | null
+          answer: string
+          concept_type?: string | null
+          concepts?: string | null
+          created_at?: string
+          difficulty?: string | null
           id?: string
-          image_url?: string | null
+          marks?: number | null
           question_text: string
-          topic_id?: string | null
-          updated_at?: string | null
+          topic_id: string
+          updated_at?: string
           year?: number | null
         }
         Update: {
-          answer_text?: string
-          concepts?: string[] | null
-          created_at?: string | null
-          difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
-          estimated_time?: number | null
+          answer?: string
+          concept_type?: string | null
+          concepts?: string | null
+          created_at?: string
+          difficulty?: string | null
           id?: string
-          image_url?: string | null
+          marks?: number | null
           question_text?: string
-          topic_id?: string | null
-          updated_at?: string | null
+          topic_id?: string
+          updated_at?: string
           year?: number | null
         }
         Relationships: [
@@ -176,99 +122,60 @@ export type Database = {
       }
       subjects: {
         Row: {
-          class_id: string
-          created_at: string | null
-          icon: string | null
+          created_at: string
+          emoji: string | null
+          exam_id: string
           id: string
           name: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          class_id: string
-          created_at?: string | null
-          icon?: string | null
+          created_at?: string
+          emoji?: string | null
+          exam_id: string
           id?: string
           name: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          class_id?: string
-          created_at?: string | null
-          icon?: string | null
+          created_at?: string
+          emoji?: string | null
+          exam_id?: string
           id?: string
           name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      topic_progress: {
-        Row: {
-          completed_questions: number | null
-          created_at: string | null
-          id: string
-          percentage_completed: number | null
-          time_spent: number | null
-          topic_id: string | null
-          total_questions: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          completed_questions?: number | null
-          created_at?: string | null
-          id?: string
-          percentage_completed?: number | null
-          time_spent?: number | null
-          topic_id?: string | null
-          total_questions?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          completed_questions?: number | null
-          created_at?: string | null
-          id?: string
-          percentage_completed?: number | null
-          time_spent?: number | null
-          topic_id?: string | null
-          total_questions?: number | null
-          updated_at?: string | null
-          user_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "topic_progress_topic_id_fkey"
-            columns: ["topic_id"]
+            foreignKeyName: "subjects_exam_id_fkey"
+            columns: ["exam_id"]
             isOneToOne: false
-            referencedRelation: "topics"
+            referencedRelation: "exams"
             referencedColumns: ["id"]
           },
         ]
       }
       topics: {
         Row: {
-          chapter_id: string | null
-          created_at: string | null
+          chapter_id: string
+          created_at: string
           id: string
           name: string
-          topic_number: number | null
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          chapter_id?: string | null
-          created_at?: string | null
+          chapter_id: string
+          created_at?: string
           id?: string
           name: string
-          topic_number?: number | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          chapter_id?: string | null
-          created_at?: string | null
+          chapter_id?: string
+          created_at?: string
           id?: string
           name?: string
-          topic_number?: number | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -280,89 +187,6 @@ export type Database = {
           },
         ]
       }
-      user_progress: {
-        Row: {
-          bookmarked_at: string | null
-          completed_at: string | null
-          created_at: string | null
-          id: string
-          question_id: string | null
-          status: Database["public"]["Enums"]["question_status"] | null
-          time_spent: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          bookmarked_at?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          question_id?: string | null
-          status?: Database["public"]["Enums"]["question_status"] | null
-          time_spent?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          bookmarked_at?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          question_id?: string | null
-          status?: Database["public"]["Enums"]["question_status"] | null
-          time_spent?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_progress_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_stats: {
-        Row: {
-          created_at: string | null
-          current_streak: number | null
-          id: string
-          last_activity_date: string | null
-          longest_streak: number | null
-          total_questions_attempted: number | null
-          total_questions_completed: number | null
-          total_time_spent: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          current_streak?: number | null
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number | null
-          total_questions_attempted?: number | null
-          total_questions_completed?: number | null
-          total_time_spent?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          current_streak?: number | null
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number | null
-          total_questions_attempted?: number | null
-          total_questions_completed?: number | null
-          total_time_spent?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -371,12 +195,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      question_difficulty: "easy" | "medium" | "hard"
-      question_status:
-        | "not_attempted"
-        | "completed"
-        | "bookmarked"
-        | "incomplete"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -503,14 +322,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      question_difficulty: ["easy", "medium", "hard"],
-      question_status: [
-        "not_attempted",
-        "completed",
-        "bookmarked",
-        "incomplete",
-      ],
-    },
+    Enums: {},
   },
 } as const
