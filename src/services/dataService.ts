@@ -30,11 +30,13 @@ export interface Question {
   id: string;
   topic_id: string;
   question_text: string;
-  answer_text: string;
+  answer: string;
   year?: number;
   difficulty?: 'easy' | 'medium' | 'hard';
   image_url?: string;
-  concepts?: string[];
+  concepts?: string;
+  concept_type?: string;
+  marks?: number;
   estimated_time?: number;
 }
 
@@ -144,8 +146,20 @@ export const useQuestions = (topicId: string) => {
           }
           
           if (data && data.length > 0) {
-            // Save to local database for offline access
-            await localDatabase.saveQuestions(topicId, data);
+            // Transform to LocalQuestion format and save
+            const localQuestions = data.map(q => ({
+              id: q.id,
+              topic_id: q.topic_id,
+              question_text: q.question_text,
+              answer_text: q.answer,
+              year: q.year,
+              difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+              image_url: undefined,
+              concepts: q.concepts ? JSON.parse(q.concepts) : [],
+              estimated_time: q.marks ? q.marks * 2 : 60,
+              created_at: q.created_at
+            }));
+            await localDatabase.saveQuestions(topicId, localQuestions);
             return data;
           }
         }
