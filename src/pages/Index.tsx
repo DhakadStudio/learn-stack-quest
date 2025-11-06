@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { SelectionCard } from "@/components/SelectionCard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
 import { PerformanceButton } from "@/components/PerformanceButton";
 import { StreakDisplay } from "@/components/StreakDisplay";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -57,6 +58,7 @@ const Index = () => {
                   </Button>
                 )}
                 <ThemeToggle />
+                <UserMenu />
               </div>
             </div>
           </div>

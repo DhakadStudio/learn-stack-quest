@@ -2,13 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { useState, useEffect } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { localDatabase } from "@/services/localDatabase";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import SubjectSelection from "./pages/SubjectSelection";
 import ChapterSelection from "./pages/ChapterSelection";
 import TopicSelection from "./pages/TopicSelection";
@@ -73,21 +75,17 @@ const App = () => {
           <OfflineIndicator />
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/subjects/:classId" element={<SubjectSelection />} />
-              <Route path="/chapters/:classId/:subjectId" element={<ChapterSelection />} />
-              <Route path="/topics/:classId/:subjectId/:chapterId" element={<TopicSelection />} />
-              {/* Question selection page - shows list of questions to choose from */}
-              <Route path="/question-list/:classId/:subjectId/:chapterId/:topicId" element={<QuestionSelection />} />
-              {/* Question session page - actual question solving interface */}
-              <Route path="/questions/:classId/:subjectId/:chapterId/:topicId" element={<QuestionSession />} />
-              <Route path="/bookmarks" element={<BookmarkedQuestions />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/subjects/:classId" element={<ProtectedRoute><SubjectSelection /></ProtectedRoute>} />
+            <Route path="/chapters/:classId/:subjectId" element={<ProtectedRoute><ChapterSelection /></ProtectedRoute>} />
+            <Route path="/topics/:classId/:subjectId/:chapterId" element={<ProtectedRoute><TopicSelection /></ProtectedRoute>} />
+            <Route path="/question-list/:classId/:subjectId/:chapterId/:topicId" element={<ProtectedRoute><QuestionSelection /></ProtectedRoute>} />
+            <Route path="/questions/:classId/:subjectId/:chapterId/:topicId" element={<ProtectedRoute><QuestionSession /></ProtectedRoute>} />
+            <Route path="/bookmarks" element={<ProtectedRoute><BookmarkedQuestions /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
