@@ -8,6 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const signInSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const signUpSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  fullName: z.string().trim().min(1, 'Full name is required').max(100, 'Full name must be less than 100 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -33,20 +49,26 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signInEmail || !signInPassword) {
-      toast.error('Please fill in all fields');
+    const result = signInSchema.safeParse({
+      email: signInEmail,
+      password: signInPassword,
+    });
+
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
     setIsLoading(true);
-    const { error } = await signIn(signInEmail, signInPassword);
+    const { error } = await signIn(result.data.email, result.data.password);
     setIsLoading(false);
 
     if (error) {
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else {
-        toast.error(error.message || 'Failed to sign in');
+        toast.error('Failed to sign in');
       }
     } else {
       navigate('/');
@@ -56,30 +78,28 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signUpEmail || !signUpPassword || !signUpFullName) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    const result = signUpSchema.safeParse({
+      email: signUpEmail,
+      password: signUpPassword,
+      fullName: signUpFullName,
+      confirmPassword: signUpConfirmPassword,
+    });
 
-    if (signUpPassword !== signUpConfirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (signUpPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
     setIsLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword, signUpFullName);
+    const { error } = await signUp(result.data.email, result.data.password, result.data.fullName);
     setIsLoading(false);
 
     if (error) {
       if (error.message.includes('already registered')) {
         toast.error('Email already registered');
       } else {
-        toast.error(error.message || 'Failed to create account');
+        toast.error('Failed to create account');
       }
     }
   };
