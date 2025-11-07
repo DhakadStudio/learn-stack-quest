@@ -73,14 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
         if (profileError) {
-          console.error('Profile creation error:', profileError);
+          console.error('Profile creation failed');
         }
       }
 
       toast.success('Account created! Please check your email to verify.');
       return { error: null };
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Sign up failed');
       return { error };
     }
   };
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Signed in successfully!');
       return { error: null };
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('Sign in failed');
       return { error };
     }
   };
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       toast.success('Signed out successfully');
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('Sign out failed');
       toast.error('Failed to sign out');
     }
   };
